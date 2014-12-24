@@ -5,6 +5,13 @@ Course Project for the Principles of Compiler
 
 [Python Lex Yacc手册](http://www.pchou.info/open-source/2014/01/18/52da47204d4cb.html)
 
+## Usage
+
+```bash
+$ python md2html.py --run <input_file>
+$ python md2html.py --run ./data/Lv0.md     # example
+```
+
 ## Task
 
 #### Task 1 ([Hu Yonghao](https://github.com/ForeverHYH))
