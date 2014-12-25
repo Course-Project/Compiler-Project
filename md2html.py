@@ -17,12 +17,12 @@ tokens = (
     'CR',
     'WORD', 'SPACE'
     )
-tokens = (
-    'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
-    'SPACE', 'CR',
-    'CHAR',
-    'STAR', 'UNDERLINE', 'CODE', 'MINUS', 'PLUS', 'L_AB', 'R_AB', 'L_RB', 'R_RB', 'L_B', 'R_B', 'SURPRISE'
-    )
+# tokens = (
+#     'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+#     'SPACE', 'CR',
+#     'CHAR',
+#     'STAR', 'UNDERLINE', 'CODE', 'MINUS', 'PLUS', 'L_AB', 'R_AB', 'L_RB', 'R_RB', 'L_B', 'R_B', 'SURPRISE'
+#     )
 
 # Tokens
 t_H1 = r'\#[ ]*'
@@ -32,6 +32,7 @@ t_H4 = r'\#\#\#\#[ ]*'
 t_H5 = r'\#\#\#\#\#[ ]*'
 t_H6 = r'\#\#\#\#\#\#[ ]*'
 t_SPACE = r'[ ]+'
+
 
 def t_WORD(t):
     r'\w+'
