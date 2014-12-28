@@ -75,5 +75,6 @@ index.html
 # ply
 parser.out
 parsetab.py
+*.out
 
 .DS_Store
