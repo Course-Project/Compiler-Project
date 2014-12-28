@@ -8,8 +8,8 @@ Course Project for the Principles of Compiler
 ## Usage
 
 ```bash
-$ python md2html.py --run <input_file>
-$ python md2html.py --run ./data/Lv0.md     # example
+$ python md2html.py -run <input_file>
+$ python md2html.py -run ./data/Lv0.md     # example
 ```
 
 ## Task
