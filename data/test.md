@@ -16,11 +16,15 @@ my `mama` always said there's an awful lot you can tell about a person by their 
 <http://www.github.com/guoylyy/>
 
 * i like this film.
+* fjdkafjlkdaj fjdkslaf
+
+* fjdkajflk
 
 ---
 <http://www.github.com/guoylyy/>
 
 1. i wish jenny can marry with gump early.
+2. dkslak
 
 ===
 

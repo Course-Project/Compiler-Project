@@ -14,7 +14,16 @@ these must be  **comfortable shoes**, i bet you cloud walk all day in shoes _lik
 * * *
 
 
+def p_factor_simplelink(p):
+#     '''factor : L_AB factor R_AB
+#               | L_AB factor R_AB str'''
+#     if len(p) == 4:
+#         p[0] = '<a href="' + str(p[2]) +'">' + str(p[2]) + '</a>'
+#     else:
+#         p[0] = '<a href="' + str(p[2]) +'">' + str(p[2]) + '</a>' + str(p[4])
 
+
+<http://www.github.com/guoylyy/>
 
 
 
