@@ -3,7 +3,7 @@
 # @Date    : 2014-12-21 11:02:37
 # @Author  : Tom Hu (webmaster@h1994st.com)
 # @Link    : http://h1994st.com
-# @Version : 1.0
+# @Version : 0.9
 
 import sys
 import ply.lex as lex

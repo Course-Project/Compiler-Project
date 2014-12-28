@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Date    : 2014-12-21 11:02:37
-# @Author  : Wang Xiaoying
-# @Version : 2.0
+# @Date    : 2014-12-28 14:47:22
+# @Author  : Tom Hu (webmaster@h1994st.com)
+# @Link    : http://h1994st.com
+# @Version : 3.0
 
 import sys
 import ply.lex as lex
@@ -19,15 +20,20 @@ tokens = (
     'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
     'SPACE', 'CR',
     'CHAR',
-    'STAR',  'MINUS' ,'EQUAL',
-    'DOUBLESTAROPEN','DOUBLESTARCLOSE',
-    'DOUBLEUNDERLINEOPEN','DOUBLEUNDERLINECLOSE',
-    'STAROPEN','STARCLOSE',
-    'UNDERLINEOPEN', 'UNDERLINECLOSE',
-    'CODEOPEN', 'CODECLOSE', 'PLUS',
-    'L_AB', 'R_AB', 'L_SB', 'R_SB','L_RB', 'R_RB',
-    'URL', 'ORDERLIST', 'UNORDERLIST'
+    'STAR_D', 'MINUS', 'EQUAL',
+    'DOUBLESTAR',
+    'DOUBLEUNDERLINE',
+    'STAR',
+    'UNDERLINE',
+    'INLINECODE', 'PLUS',
+    'L_AB', 'R_AB', 'L_SB', 'R_SB', 'L_RB', 'R_RB',
+    'URL',
+    'ORDERLIST', 'UNORDERLIST',
+    'SURPRISE',
+    'BLOCKCODE'
     )
+
+symbol_stack = []
 
 # Tokens
 t_H1 = r'\#[ ]*'
@@ -39,6 +45,7 @@ t_H6 = r'\#\#\#\#\#\#[ ]*'
 t_ANY_SPACE = r'[ ]+'
 t_MINUS = r'[ ]*(\-[ ]*){3,}'
 t_EQUAL = r'[ ]*(\=[ ]*){3,}'
+t_SURPRISE = r'\!'
 
 t_ANY_ignore = '\t'
 
@@ -47,7 +54,7 @@ def t_URL(t):
     t.value = str(t.value)
     return t
 
-def t_STAR(t):
+def t_STAR_D(t):
     r'[ ]*\n+[ ]*(\*[ ]*){3,}'
     return t
 
@@ -75,84 +82,61 @@ def t_R_AB(t):
     r'\>'
     t.value = str(t.value)
     return t
+
 def t_L_SB(t):
     r'\['
     t.value = str(t.value)
     return t
+
 def t_R_SB(t):
     r'\]'
     t.value = str(t.value)
     return t
+
 def t_L_RB(t):
     r'\('
     t.value = str(t.value)
     return t
+
 def t_R_RB(t):
     r'\)'
     t.value = str(t.value)
     return t
 
-def t_CODEOPEN(t):
+def t_BLOCKCODE(t):
+    r'\`\`\`\n'
+    t.lexer.isBlockCode = True
+    return t
+
+def t_INLINECODE(t):
     r'\`'
-    t.lexer.push_state('close')
     t.value = str(t.value)
     return t
 
-def t_DOUBLEUNDERLINEOPEN(t):
+def t_DOUBLEUNDERLINE(t):
     r'\_\_'
-    t.lexer.push_state('close')
     return t
 
-def t_UNDERLINEOPEN(t):
+def t_UNDERLINE(t):
     r'\_'
-    t.lexer.push_state('close')
     return t
 
-def t_DOUBLESTAROPEN(t):
+def t_DOUBLESTAR(t):
     r'\*\*'
-    t.lexer.push_state('close')
     return t
 
-def t_STAROPEN(t):
+def t_STAR(t):
     r'\*'
-    t.lexer.push_state('close')
-    return t
-
-def t_close_CODECLOSE(t):
-    r'\`'
-    t.lexer.pop_state()
-    t.value = str(t.value)
-    return t
-
-def t_close_DOUBLESTARCLOSE(t):
-    r'\*\*'
-    t.lexer.pop_state()
-    return t
-
-def t_close_STARCLOSE(t):
-    r'\*'
-    t.lexer.pop_state()
-    return t
-
-def t_close_DOUBLEUNDERLINECLOSE(t):
-    r'\_\_'
-    t.lexer.pop_state()
-    return t
-
-def t_close_UNDERLINECLOSE(t):
-    r'\_'
-    t.lexer.pop_state()
     return t
 
 def t_ANY_CHAR(t):
-    r'[a-zA-Z0-9,\':\.\/]'
+    r'[a-zA-Z0-9,\'":\.\/]'
     t.value = str(t.value)
     return t
 
 def t_ANY_CR(t):
     r'[ ]*\n+'
     t.lexer.lineno += t.value.count("\n")
-    t.lexer.begin('INITIAL')
     return t
 
 def t_ANY_error(t):
@@ -179,7 +163,7 @@ names = {}
 
 def p_body(p):
     'body : statement'
-    print '<html><head><title>MarkdownToHtml</title></head><body>' + p[1] + '</body></html>'
+    print '<html><head><title>Markdown To Html</title></head><body>' + p[1] + '</body></html>'
 
 def p_state_text(p):
     '''statement : expression
@@ -200,15 +184,6 @@ def p_state_newline(p):
         #     p[0] = p[0] + '<br>'
     elif (len(p) == 3): 
         p[0] = p[1]
-
-        # for i in range(1,str(p[2]).count("\n")):
-        #     p[0] = p[0] + '<br>'
-
-# def p_state_ulol(p):
-#     '''statement : list
-#                  | statement list'''
-#     if len(p)==2:
-
 
 def p_state_devide(p):
     '''statement : divider
@@ -260,7 +235,6 @@ def p_list_ul(p):
     else:
         p[0] = '<ul>' + str(p[1]) + str(p[2])[4:-5] + '</ul>'
 
-
 def p_olistitem_li(p):
     '''olistitem : ORDERLIST
                  | ORDERLIST factor'''
@@ -277,7 +251,6 @@ def p_ulistitem_li(p):
     else:
         p[0] = '<li>' + str(p[2]) + '</li>'
 
-
 def p_factor_text(p):
     '''factor : str
               | factor SPACE factor
@@ -290,28 +263,28 @@ def p_factor_text(p):
         p[0] = p[1] + p[2]
 
 def p_factor_blod(p):
-    '''factor : DOUBLESTAROPEN factor DOUBLESTARCLOSE
-              | DOUBLEUNDERLINEOPEN factor DOUBLEUNDERLINECLOSE
-              | DOUBLESTAROPEN factor DOUBLESTARCLOSE str
-              | DOUBLEUNDERLINEOPEN factor DOUBLEUNDERLINECLOSE str'''  
+    '''factor : DOUBLESTAR factor DOUBLESTAR
+              | DOUBLEUNDERLINE factor DOUBLEUNDERLINE
+              | DOUBLESTAR factor DOUBLESTAR str
+              | DOUBLEUNDERLINE factor DOUBLEUNDERLINE str'''  
     if len(p) == 4:
         p[0] = '<strong>' + str(p[2]) + '</strong>'
     else:
         p[0] = '<strong>' + str(p[2]) + '</strong>' + str(p[4])
 
 def p_factor_italic(p):
-    '''factor : STAROPEN factor STARCLOSE
-              | UNDERLINEOPEN factor UNDERLINECLOSE
-              | STAROPEN factor STARCLOSE str
-              | UNDERLINEOPEN factor UNDERLINECLOSE str'''
+    '''factor : STAR factor STAR
+              | UNDERLINE factor UNDERLINE
+              | STAR factor STAR str
+              | UNDERLINE factor UNDERLINE str'''
     if len(p) == 4:
         p[0] = '<i>' + str(p[2]) + '</i>'
     else:
         p[0] = '<i>' + str(p[2]) + '</i>' + str(p[4])
 
 def p_factor_code(p):
-    '''factor : CODEOPEN factor CODECLOSE
-              | CODEOPEN factor CODECLOSE str'''
+    '''factor : INLINECODE factor INLINECODE
+              | INLINECODE factor INLINECODE str'''
     if len(p) == 4:
         p[0] = '<code>' + str(p[2]) + '</code>'
     else:
@@ -357,23 +330,21 @@ def p_str_char(p):
            | CHAR str
            | URL
            | URL str
-           | CODEOPEN
-           | CODEOPEN str
+           | INLINECODE
+           | INLINECODE str
            | PLUS 
            | PLUS str
-           | STAROPEN
-           | STAROPEN str'''
+           | STAR
+           | STAR str'''
     if len(p) == 2:
         p[0] = p[1]
     elif len(p) == 3:
         p[0] = p[1] + p[2]
 
-
-
 def p_divider(p):
     '''divider : EQUAL 
                | MINUS 
-               | STAR '''
+               | STAR_D '''
     if len(p) == 3:
         p[0] = p[1] + p[2]
 

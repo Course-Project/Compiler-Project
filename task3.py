@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Date    : 2014-12-21 11:02:37
-# @Author  : Wang Xiaoying
-# @Version : 2.0
+# @Date    : 2014-12-28 14:47:22
+# @Author  : Tom Hu (webmaster@h1994st.com)
+# @Link    : http://h1994st.com
+# @Version : 3.0
 
 import sys
 import ply.lex as lex
@@ -19,15 +20,20 @@ tokens = (
     'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
     'SPACE', 'CR',
     'CHAR',
-    'STAR',  'MINUS' ,'EQUAL',
-    'DOUBLESTAROPEN','DOUBLESTARCLOSE',
-    'DOUBLEUNDERLINEOPEN','DOUBLEUNDERLINECLOSE',
-    'STAROPEN','STARCLOSE',
+    'STAR', 'MINUS', 'EQUAL',
+    'DOUBLESTAROPEN', 'DOUBLESTARCLOSE',
+    'DOUBLEUNDERLINEOPEN', 'DOUBLEUNDERLINECLOSE',
+    'STAROPEN', 'STARCLOSE',
     'UNDERLINEOPEN', 'UNDERLINECLOSE',
-    'CODEOPEN', 'CODECLOSE', 'PLUS',
-    'L_AB', 'R_AB', 'L_SB', 'R_SB','L_RB', 'R_RB',
-    'URL', 'ORDERLIST', 'UNORDERLIST'
+    'INLINECODEOPEN', 'INLINECODECLOSE', 'PLUS',
+    'L_AB', 'R_AB', 'L_SB', 'R_SB', 'L_RB', 'R_RB',
+    'URL',
+    'ORDERLIST', 'UNORDERLIST',
+    'SURPRISE',
+    'BLOCKCODEOPEN', 'BLOCKCODECLOSE'
     )
+
+symbol_stack = []
 
 # Tokens
 t_H1 = r'\#[ ]*'
@@ -39,6 +45,7 @@ t_H6 = r'\#\#\#\#\#\#[ ]*'
 t_ANY_SPACE = r'[ ]+'
 t_MINUS = r'[ ]*(\-[ ]*){3,}'
 t_EQUAL = r'[ ]*(\=[ ]*){3,}'
+t_SURPRISE = r'\!'
 
 t_ANY_ignore = '\t'
 
@@ -75,24 +82,34 @@ def t_R_AB(t):
     r'\>'
     t.value = str(t.value)
     return t
+
 def t_L_SB(t):
     r'\['
     t.value = str(t.value)
     return t
+
 def t_R_SB(t):
     r'\]'
     t.value = str(t.value)
     return t
+
 def t_L_RB(t):
     r'\('
     t.value = str(t.value)
     return t
+
 def t_R_RB(t):
     r'\)'
     t.value = str(t.value)
     return t
 
-def t_CODEOPEN(t):
+def t_BLOCKCODEOPEN(t):
+    r'\`\`\`\n'
+    t.lexer.push_state('close')
+    t.lexer.isBlockCode = True
+    return t
+
+def t_INLINECODEOPEN(t):
     r'\`'
     t.lexer.push_state('close')
     t.value = str(t.value)
@@ -118,7 +135,13 @@ def t_STAROPEN(t):
     t.lexer.push_state('close')
     return t
 
-def t_close_CODECLOSE(t):
+def t_close_BLOCKCODECLOSE(t):
+    r'\`\`\`\n'
+    t.lexer.pop_state()
+    t.lexer.isBlockCode = False
+    return t
+
+def t_close_INLINECODECLOSE(t):
     r'\`'
     t.lexer.pop_state()
     t.value = str(t.value)
@@ -145,14 +168,15 @@ def t_close_UNDERLINECLOSE(t):
     return t
 
 def t_ANY_CHAR(t):
-    r'[a-zA-Z0-9,\':\.\/]'
+    r'[a-zA-Z0-9,\'":\.\/]'
     t.value = str(t.value)
     return t
 
 def t_ANY_CR(t):
     r'[ ]*\n+'
     t.lexer.lineno += t.value.count("\n")
-    t.lexer.begin('INITIAL')
+    if hasattr(t.lexer, 'isBlockCode') and not t.lexer.isBlockCode:
+        t.lexer.begin('INITIAL')
     return t
 
 def t_ANY_error(t):
@@ -179,7 +203,7 @@ names = {}
 
 def p_body(p):
     'body : statement'
-    print '<html><head><title>MarkdownToHtml</title></head><body>' + p[1] + '</body></html>'
+    print '<html><head><title>Markdown To Html</title></head><body>' + p[1] + '</body></html>'
 
 def p_state_text(p):
     '''statement : expression
@@ -200,15 +224,6 @@ def p_state_newline(p):
         #     p[0] = p[0] + '<br>'
     elif (len(p) == 3): 
         p[0] = p[1]
-
-        # for i in range(1,str(p[2]).count("\n")):
-        #     p[0] = p[0] + '<br>'
-
-# def p_state_ulol(p):
-#     '''statement : list
-#                  | statement list'''
-#     if len(p)==2:
-
 
 def p_state_devide(p):
     '''statement : divider
@@ -260,7 +275,6 @@ def p_list_ul(p):
     else:
         p[0] = '<ul>' + str(p[1]) + str(p[2])[4:-5] + '</ul>'
 
-
 def p_olistitem_li(p):
     '''olistitem : ORDERLIST
                  | ORDERLIST factor'''
@@ -276,7 +290,6 @@ def p_ulistitem_li(p):
         p[0] = '<li></li>'
     else:
         p[0] = '<li>' + str(p[2]) + '</li>'
-
 
 def p_factor_text(p):
     '''factor : str
@@ -310,8 +323,8 @@ def p_factor_italic(p):
         p[0] = '<i>' + str(p[2]) + '</i>' + str(p[4])
 
 def p_factor_code(p):
-    '''factor : CODEOPEN factor CODECLOSE
-              | CODEOPEN factor CODECLOSE str'''
+    '''factor : INLINECODEOPEN factor INLINECODECLOSE
+              | INLINECODEOPEN factor INLINECODECLOSE str'''
     if len(p) == 4:
         p[0] = '<code>' + str(p[2]) + '</code>'
     else:
@@ -357,8 +370,8 @@ def p_str_char(p):
            | CHAR str
            | URL
            | URL str
-           | CODEOPEN
-           | CODEOPEN str
+           | INLINECODEOPEN
+           | INLINECODEOPEN str
            | PLUS 
            | PLUS str
            | STAROPEN
@@ -367,8 +380,6 @@ def p_str_char(p):
         p[0] = p[1]
     elif len(p) == 3:
         p[0] = p[1] + p[2]
-
-
 
 def p_divider(p):
     '''divider : EQUAL 

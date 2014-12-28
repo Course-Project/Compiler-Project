@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Date    : 2014-12-21 11:02:37
-# @Author  : Tom Hu (webmaster@h1994st.com)
-# @Link    : http://h1994st.com
+# @Author  : Hu Yonghao
 # @Version : 1.0
 
 import sys
