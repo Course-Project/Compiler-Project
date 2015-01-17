@@ -28,12 +28,13 @@
 
 * 使用的库链接：<https://highlightjs.org/>
 
-测试文件和测试方法
+## 测试文件和测试方法
 
-```
-测试文件位于项目目录xxx下
+测试文件位于项目目录 `data` 下
+
 测试：
-python run.py <filename.md>
+```
+python main.py <filename>
 ```
 
 ## 项目特别说明
