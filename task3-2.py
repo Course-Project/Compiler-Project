@@ -13,24 +13,28 @@ from ply.lex import TOKEN
 # Lex
 # 
 states = (
-    ('close','exclusive'),
+    ('close', 'exclusive'),
+    ('strong', 'exclusive'),
+    ('italic', 'exclusive'),
+    ('codeblock', 'exclusive')
+    ('inlinecode', 'exclusive')
     )
 
 tokens = (
     'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
     'SPACE', 'CR',
     'CHAR',
-    'STAR_D', 'MINUS', 'EQUAL',
-    'DOUBLESTAR',
-    'DOUBLEUNDERLINE',
-    'STAR',
-    'UNDERLINE',
-    'INLINECODE', 'PLUS',
+    'STAR', 'MINUS', 'EQUAL',
+    'DOUBLESTAROPEN', 'DOUBLESTARCLOSE',
+    'DOUBLEUNDERLINEOPEN', 'DOUBLEUNDERLINECLOSE',
+    'STAROPEN', 'STARCLOSE',
+    'UNDERLINEOPEN', 'UNDERLINECLOSE',
+    'INLINECODEOPEN', 'INLINECODECLOSE', 'PLUS',
     'L_AB', 'R_AB', 'L_SB', 'R_SB', 'L_RB', 'R_RB',
     'URL',
     'ORDERLIST', 'UNORDERLIST',
     'SURPRISE',
-    'BLOCKCODE'
+    'BLOCKCODEOPEN', 'BLOCKCODECLOSE', 
     )
 
 symbol_stack = []
@@ -54,7 +58,7 @@ def t_URL(t):
     t.value = str(t.value)
     return t
 
-def t_STAR_D(t):
+def t_STAR(t):
     r'[ ]*\n+[ ]*(\*[ ]*){3,}'
     return t
 
@@ -103,30 +107,68 @@ def t_R_RB(t):
     t.value = str(t.value)
     return t
 
-def t_BLOCKCODE(t):
+def t_BLOCKCODEOPEN(t):
     r'\`\`\`\n'
+    t.lexer.push_state('close')
     t.lexer.isBlockCode = True
     return t
 
-def t_INLINECODE(t):
+def t_INLINECODEOPEN(t):
     r'\`'
+    t.lexer.push_state('close')
     t.value = str(t.value)
     return t
 
-def t_DOUBLEUNDERLINE(t):
+def t_DOUBLEUNDERLINEOPEN(t):
     r'\_\_'
+    t.lexer.push_state('close')
     return t
 
-def t_UNDERLINE(t):
+def t_UNDERLINEOPEN(t):
     r'\_'
+    t.lexer.push_state('close')
     return t
 
-def t_DOUBLESTAR(t):
+def t_DOUBLESTAROPEN(t):
     r'\*\*'
+    t.lexer.push_state('close')
     return t
 
-def t_STAR(t):
+def t_STAROPEN(t):
     r'\*'
+    t.lexer.push_state('close')
+    return t
+
+def t_close_BLOCKCODECLOSE(t):
+    r'\`\`\`\n'
+    t.lexer.pop_state()
+    t.lexer.isBlockCode = False
+    return t
+
+def t_close_INLINECODECLOSE(t):
+    r'\`'
+    t.lexer.pop_state()
+    t.value = str(t.value)
+    return t
+
+def t_close_DOUBLESTARCLOSE(t):
+    r'\*\*'
+    t.lexer.pop_state()
+    return t
+
+def t_close_STARCLOSE(t):
+    r'\*'
+    t.lexer.pop_state()
+    return t
+
+def t_close_DOUBLEUNDERLINECLOSE(t):
+    r'\_\_'
+    t.lexer.pop_state()
+    return t
+
+def t_close_UNDERLINECLOSE(t):
+    r'\_'
+    t.lexer.pop_state()
     return t
 
 def t_ANY_CHAR(t):
@@ -137,6 +179,8 @@ def t_ANY_CHAR(t):
 def t_ANY_CR(t):
     r'[ ]*\n+'
     t.lexer.lineno += t.value.count("\n")
+    if hasattr(t.lexer, 'isBlockCode') and not t.lexer.isBlockCode:
+        t.lexer.begin('INITIAL')
     return t
 
 def t_ANY_error(t):
@@ -263,28 +307,28 @@ def p_factor_text(p):
         p[0] = p[1] + p[2]
 
 def p_factor_blod(p):
-    '''factor : DOUBLESTAR factor DOUBLESTAR
-              | DOUBLEUNDERLINE factor DOUBLEUNDERLINE
-              | DOUBLESTAR factor DOUBLESTAR str
-              | DOUBLEUNDERLINE factor DOUBLEUNDERLINE str'''  
+    '''factor : DOUBLESTAROPEN factor DOUBLESTARCLOSE
+              | DOUBLEUNDERLINEOPEN factor DOUBLEUNDERLINECLOSE
+              | DOUBLESTAROPEN factor DOUBLESTARCLOSE str
+              | DOUBLEUNDERLINEOPEN factor DOUBLEUNDERLINECLOSE str'''  
     if len(p) == 4:
         p[0] = '<strong>' + str(p[2]) + '</strong>'
     else:
         p[0] = '<strong>' + str(p[2]) + '</strong>' + str(p[4])
 
 def p_factor_italic(p):
-    '''factor : STAR factor STAR
-              | UNDERLINE factor UNDERLINE
-              | STAR factor STAR str
-              | UNDERLINE factor UNDERLINE str'''
+    '''factor : STAROPEN factor STARCLOSE
+              | UNDERLINEOPEN factor UNDERLINECLOSE
+              | STAROPEN factor STARCLOSE str
+              | UNDERLINEOPEN factor UNDERLINECLOSE str'''
     if len(p) == 4:
         p[0] = '<i>' + str(p[2]) + '</i>'
     else:
         p[0] = '<i>' + str(p[2]) + '</i>' + str(p[4])
 
 def p_factor_code(p):
-    '''factor : INLINECODE factor INLINECODE
-              | INLINECODE factor INLINECODE str'''
+    '''factor : INLINECODEOPEN factor INLINECODECLOSE
+              | INLINECODEOPEN factor INLINECODECLOSE str'''
     if len(p) == 4:
         p[0] = '<code>' + str(p[2]) + '</code>'
     else:
@@ -297,6 +341,14 @@ def p_factor_simplelink(p):
         p[0] = '<a href="' + str(p[2]) +'">' + str(p[2]) + '</a>'
     else:
         p[0] = '<a href="' + str(p[2]) +'">' + str(p[2]) + '</a>' + str(p[4])
+
+def p_factor_image(p):
+    '''factor : SURPRISE L_SB factor R_SB L_RB URL R_RB
+              | SURPRISE L_SB factor R_SB L_RB URL R_RB str'''
+    if len(p) == 8:
+        p[0] = '<img src="' + p[6] + '" alt="' + p[3] + '">'
+    else:
+        p[0] = '<img src="' + p[6] + '" alt="' + p[3] + '">' + str(p[8])
 
 def p_factor_link(p):
     '''factor : L_SB factor R_SB L_RB URL R_RB
@@ -324,18 +376,17 @@ def p_factor_symbol(p):
     elif len(p) == 3:
         p[0] = p[1] + p[2]
 
-
 def p_str_char(p):
     '''str : CHAR
            | CHAR str
            | URL
            | URL str
-           | INLINECODE
-           | INLINECODE str
+           | INLINECODEOPEN
+           | INLINECODEOPEN str
            | PLUS 
            | PLUS str
-           | STAR
-           | STAR str'''
+           | STAROPEN
+           | STAROPEN str'''
     if len(p) == 2:
         p[0] = p[1]
     elif len(p) == 3:
@@ -344,7 +395,7 @@ def p_str_char(p):
 def p_divider(p):
     '''divider : EQUAL 
                | MINUS 
-               | STAR_D '''
+               | STAR '''
     if len(p) == 3:
         p[0] = p[1] + p[2]
 
