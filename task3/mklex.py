@@ -117,7 +117,8 @@ def t_OLI(t):
 
 @TOKEN(tab)
 def t_TAB(t):
-    return t
+    pass
+    # return t
 
 def t_URL(t):
     r'(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?'
@@ -205,12 +206,19 @@ def t_blockcode_CR(t):
     t.lexer.lineno += t.value.count("\n")
     return t
 
-def t_strong_emphasize_inlinecode_INITIAL_CR(t):
+def t_strong_emphasize_inlinecode_CR(t):
     r'[ ]*\n+'
     if t.value.count('\n') >= 2:
         t.type = 'CR2'
     t.lexer.lineno += t.value.count("\n")
     t.lexer.begin('INITIAL') # Go back
+    return t
+
+def t_INITIAL_CR(t):
+    r'[ ]*\n*\t*[ ]*\n+'
+    if t.value.count('\n') >= 2:
+        t.type = 'CR2'
+    t.lexer.lineno += t.value.count("\n")
     return t
 
 # Error handling

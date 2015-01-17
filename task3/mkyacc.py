@@ -179,6 +179,7 @@ def p_inline(p):
         p[0] = str(p[1]) + ' ' + str(p[3])
 
 def p_error(p):
+    print p
     if p:
         print("error at '%s' line '%d'" % (p.value, p.lineno))
     else:
