@@ -167,6 +167,10 @@ def p_one(p):
            | autolink'''
     p[0] = p[1]
 
+def p_inline_s(p):
+    'inline : inline CR inline'
+    p[0] = str(p[1]) + ' ' + str(p[3])
+
 def p_inline(p):
     '''inline : one
               | one inline

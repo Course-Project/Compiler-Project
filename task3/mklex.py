@@ -59,7 +59,7 @@ starDivider = r'([ ]*(\*[ ]*){3,}\n)'
 divider = lineDivider + r'|' + equalDivider + r'|' + starDivider
 
 blockcodeopen = blockcode + r'(' + word + r')*\n'
-blockcodeclose = blockcode + r'\n'
+blockcodeclose = blockcode + r'(\n)?'
 
 strong = doubleStar + r'|' + doubleUnderline
 emphasize = star + r'|' + underline
@@ -139,6 +139,7 @@ def t_blockcode_BLOCKCODECLOSE(t):
 
 @TOKEN(code)
 def t_blockcode_WORD(t):
+    t.lexer.lineno += t.value.count("\n")
     return t
 
 # Blockcode open
