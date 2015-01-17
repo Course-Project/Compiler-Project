@@ -28,9 +28,9 @@ def p_body(p):
 def p_article(p):
     '''article : block
                | block article'''
-    if (len(p)==2):
+    if len(p)==2:
         p[0] = p[1] 
-    elif (len(p) == 3):
+    elif len(p) == 3:
         p[0] = str(p[1]) + str(p[2])
 
 # Block
@@ -154,8 +154,20 @@ def p_link(p):
     p[0] = '<a href="%s">%s</a>' % (p[5], p[2])
 
 def p_autolink(p):
-    'autolink : L_AB URL R_AB'
-    p[0] = '<a href="%s">%s</a>' % (p[2], p[2])
+    '''autolink : L_AB URL R_AB
+                | URL'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = '<a href="%s">%s</a>' % (p[2], p[2])
+
+def p_autoemail(p):
+    '''autoemail : L_AB EMAIL R_AB
+                 | EMAIL'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = '<a href="mailto:%s">%s</a>' % (p[2], p[2])
 
 def p_one(p):
     '''one : WORD
@@ -164,7 +176,8 @@ def p_one(p):
            | inlinecode
            | image
            | link
-           | autolink'''
+           | autolink
+           | autoemail'''
     p[0] = p[1]
 
 def p_inline(p):

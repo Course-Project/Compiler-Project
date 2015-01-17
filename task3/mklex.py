@@ -24,7 +24,7 @@ tokens = (
     'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
     'DIVIDER',
     'SPACE', 'CR', 'CR2', 'TAB',
-    'URL',
+    'URL', 'EMAIL',
     'STRONGOPEN', 'STRONGCLOSE',
     'EMPHASIZEOPEN', 'EMPHASIZECLOSE',
     'INLINECODEOPEN', 'INLINECODECLOSE',
@@ -64,7 +64,7 @@ blockcodeclose = blockcode + r'(\n)?'
 strong = doubleStar + r'|' + doubleUnderline
 emphasize = star + r'|' + underline
 
-uli = tab + r'*' + r'(' + star + r'|' + plus + r')[ ]+'
+uli = tab + r'*' + r'(' + star + r'|' + plus + r'|' + minus + r')[ ]+'
 oli = numberIndex + r'[ ]+'
 
 # Token rules
@@ -98,6 +98,7 @@ def t_R_AB(t):
     r'\>'
     if not t.lexer.isLeftAB:
         t.type = 'BLOCKQUOTE'
+    t.lexer.isLeftAB = False
     return t
 
 @TOKEN(divider)
@@ -122,6 +123,11 @@ def t_TAB(t):
 
 def t_URL(t):
     r'(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?'
+    t.value = str(t.value)
+    return t
+
+def t_EMAIL(t):
+    r'(\w)+(\.\w+)*@(\w)+((\.\w+)+)'
     t.value = str(t.value)
     return t
 
