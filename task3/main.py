@@ -18,7 +18,13 @@ yacc.yacc()
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print "usage : main.py <filename>"
-        raise SystemExit 
+        raise SystemExit
+    elif len(sys.argv) == 2:
+        inputPath = os.path.realpath(sys.argv[1])
+        output = yacc.parse(open(inputPath, 'r').read())
 
-    if len(sys.argv) == 2:
-        yacc.parse(open(sys.argv[1]).read())
+        filename = inputPath.split('/')[-1]
+        outputPath = os.path.join(os.getcwd(), 'output_' + filename[:-3] + '.html')
+        outputFile = open(outputPath, 'w')
+        outputFile.write(output)
+        outputFile.close()

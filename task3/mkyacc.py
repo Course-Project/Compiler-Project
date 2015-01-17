@@ -23,7 +23,7 @@ listStack = []
 
 def p_body(p):
     'body : article'
-    print '<!DOCTYPE html><html><head><link rel="stylesheet" href="./GitHub2.css"><link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css"><title>Markdown To Html</title></head><body>' + p[1] + '</body><script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script><script>hljs.initHighlightingOnLoad();</script></html>'
+    p[0] = '<!DOCTYPE html><html><head><link rel="stylesheet" href="./GitHub2.css"><link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css"><title>Markdown To Html</title></head><body>%s</body><script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script><script>hljs.initHighlightingOnLoad();</script></html>' % p[1]
 
 def p_article(p):
     '''article : block
@@ -166,10 +166,6 @@ def p_one(p):
            | link
            | autolink'''
     p[0] = p[1]
-
-def p_inline_s(p):
-    'inline : inline CR inline'
-    p[0] = str(p[1]) + ' ' + str(p[3])
 
 def p_inline(p):
     '''inline : one
