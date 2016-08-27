@@ -5,6 +5,12 @@ Course Project for the Principles of Compiler
 
 [Python Lex Yacc手册](http://www.pchou.info/open-source/2014/01/18/52da47204d4cb.html)
 
+## 依赖
+
+```bash
+$ [sudo] pip install ply
+```
+
 ## 项目基本功能
 
 本项目主要实现了 Markdown 的解析，能够正确解析的 Markdown 语法最要有：
@@ -64,6 +70,7 @@ Course Project for the Principles of Compiler
 ## 测试方法：
 
 ```bash
+$ cd src/
 $ python main.py <filename>
 ```
 
